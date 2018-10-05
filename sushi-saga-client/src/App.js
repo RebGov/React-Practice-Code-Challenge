@@ -2,16 +2,76 @@ import React, { Component } from 'react';
 import SushiContainer from './containers/SushiContainer';
 import Table from './containers/Table';
 
+
 // Endpoint!
 const API = "http://localhost:3000/sushis"
 
 class App extends Component {
 
+  constructor(){
+    super();
+    this.state={
+      sushis:[],
+      isLoading: true,
+      sushiIndex: 0,
+      allowance: 100,
+      eatenSushi:[]
+    }
+  }
+
+componentDidMount(){
+  fetch(API)
+  .then(resp => resp.json())
+  .then(sushis => {this.setState({sushis, isLoading: false})})
+}
+
+eatSushi = (sushi) => {
+  const newAllowance = this.state.allowance - sushi.price
+
+  if(!this.state.eatenSushi.includes(sushi) && newAllowance >= 0){
+    this.setState({
+      eatenSushi: [...this.state.eatenSushi, sushi],
+      allowance: newAllowance
+    })
+  }
+}
+
+grabSushi = () => {
+  return this.state.sushis.slice(this.state.sushiIndex, this.state.sushiIndex+4)
+}
+
+moreSushis = () => {
+  this.setState({
+    sushiIndex: this.state.sushiIndex+4
+  })
+}
+addToSushiWallet = (value) => {
+
+  const addMoney = parseInt(value) + this.state.allowance
+  this.setState({
+    allowance: addMoney
+  })
+}
+
   render() {
+    if(this.state.isLoading){
+      return(
+        <div>Loading...</div>
+      )
+    }
     return (
       <div className="app">
-        <SushiContainer  />
-        <Table />
+        <SushiContainer
+          sushis={this.grabSushi()}
+          eatSushi={this.eatSushi}
+          eatenSushi={this.state.eatenSushi}
+          moreSushis={this.moreSushis}
+          addToSushiWallet={this.addToSushiWallet}
+          addMoney={this.state.addMoney}
+         />
+        <Table
+          allowance={this.state.allowance}
+          eatenSushi={this.state.eatenSushi} />
       </div>
     );
   }
